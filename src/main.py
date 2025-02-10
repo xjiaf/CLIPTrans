@@ -40,7 +40,13 @@ def main(params):
     if params.num_gpus > 1:
         init_distributed()
     else:
-        torch.cuda.set_device(params.local_rank)
+        available_gpus = torch.cuda.device_count()
+        if params.gpu_id >= available_gpus or params.gpu_id < 0:
+            print(f"GPU {params.gpu_id} not available. Using GPU 0.")
+            gpu_id = 0
+        else:
+            gpu_id = params.gpu_id
+        torch.cuda.set_device(gpu_id)
     model.cuda()
     tokenizer = model.tokenizer
     train_texts, test_texts, train_tok, test_tok, train_image_embs, test_image_embs, train_text_embs, test_text_embs, train_tok_mclip, test_tok_mclip = get_ds[params.ds](params, model, params.test_ds)
@@ -153,6 +159,7 @@ if __name__ == '__main__':
     parser.add_argument('--noise_train', action = 'store_true', help = 'Remove mask_prob% of the tokens while training')
     parser.add_argument('--noise_test', action = 'store_true', help = 'Remove mask_prob% of the tokens while testing')
     parser.add_argument('--preprocess_only', action = 'store_true')
+    parser.add_argument('--gpu_id', type=int, default=0)
     params = parser.parse_args()
     assert not (params.stage in ['caption', 'text_recon'] and params.ds == 'wmt'), 'While using text-only NMT, you cannot train stage 1. Make sure you load a stage 1 pretrained model'
     main(params)
