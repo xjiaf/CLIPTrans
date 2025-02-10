@@ -8,7 +8,7 @@ import os
 from multi30k import *
 from wit import *
 from wmt import *
-from coco_captions import *
+# from coco_captions import *
 from model_utils import get_lang_code
 from dataset import *
 from model import CLIPTrans, CLIPTrans_CLIP
@@ -20,7 +20,7 @@ import random
 from collate_fns import *
 import torch.nn as nn
 
-get_ds = {'multi30k': get_Multi30k, 'wit': get_WIT, 'wmt': get_WMT, 'coco': get_coco}
+get_ds = {'multi30k': get_Multi30k, 'wit': get_WIT, 'wmt': get_WMT}
 
 def init_seed(seed):
     random.seed(seed)
