@@ -49,8 +49,8 @@ def main(params):
     train_dataset_inputs = {'params': params, 'tok_data': train_tok, 'raw_data': train_texts, 'clip_tok_data': train_tok_mclip}
     test_dataset_inputs = {'params': params, 'tok_data': test_tok, 'raw_data': test_texts, 'clip_tok_data': test_tok_mclip}
     stage_message = {
-                        'caption': 'Pretraining on Image Captions', 
-                        'text_recon': 'Pretraining on Text Reconstruction', 
+                        'caption': 'Pretraining on Image Captions',
+                        'text_recon': 'Pretraining on Text Reconstruction',
                         'translate': 'Pairwise Translation',
                         'triplet': 'Triplet Training'
                     }
@@ -66,7 +66,7 @@ def main(params):
     if params.stage in ['text_recon', 'translate']:
         train_dataset_inputs['clip_embs'] = train_text_embs
         test_dataset_inputs['clip_embs'] = test_text_embs if not params.noise_test else test_image_embs
-    
+
     elif params.stage in ['caption']:
         train_dataset_inputs['clip_embs'] = train_image_embs
         test_dataset_inputs['clip_embs'] = test_image_embs
@@ -106,7 +106,7 @@ def main(params):
         test_dl = DataLoader(test_dataset, batch_size = 2*params.batch_size,
                         num_workers = 6, pin_memory = True, collate_fn = collate_multi, sampler=test_sampler)
     else:
-        train_dl = DataLoader(train_dataset, batch_size = params.batch_size, shuffle = True, 
+        train_dl = DataLoader(train_dataset, batch_size = params.batch_size, shuffle = True,
                             num_workers = 0, pin_memory = True, collate_fn = collate_multi)
         test_dl = DataLoader(test_dataset, batch_size = params.batch_size, shuffle = False,
                             num_workers = 0, pin_memory = True, collate_fn = collate_multi)
@@ -131,7 +131,8 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type = float, default = 1e-5)
     parser.add_argument('--epochs', type = int, default = 15)
     parser.add_argument('--model_dir', type = str, default = 'models')
-    parser.add_argument('--data_dir', type = str, default = 'data')
+    # parser.add_argument('--data_dir', type = str, default = 'data')
+    parser.add_argument('--data_dir', type = str, default = '/mnt/iusers01/fatpou01/compsci01/m50406xq/scratch/GraphCLIP/data')
     parser.add_argument('--src_lang', type = str, default = 'en')
     parser.add_argument('--tgt_lang', type = str, default = 'de')
     parser.add_argument('--update_count', type = int, default = 4, help = 'number of steps to accumulate gradient before backpropagating')
