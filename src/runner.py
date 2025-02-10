@@ -49,9 +49,9 @@ class Runner:
                 name = k[7:] if 'module' in k[:7] else k # remove 'module.' of DataParallel/DistributedDataParallel
                 new_state_dict[name] = v
             checkpoint['model'] = new_state_dict
-        
+
         model.load_state_dict(checkpoint['model'], strict = False)
-        
+
         if load_opt:
             try:
                 self.optimizer.load_state_dict(checkpoint['optimizer'], strict = False)
@@ -89,7 +89,7 @@ class Runner:
             del batch
             if self.test_after > 0 and (step + 1) % self.test_after == 0:
                 self.test(model, tokenizer, params, epoch)
-        
+
         if is_main_process():
             print(f'Epoch {epoch}: Train Loss: {self.update_count * train_loss/(params.num_gpus * len(self.train_dl))}\n')
             if self.is_pretraining:
@@ -117,9 +117,9 @@ class Runner:
                 if is_main_process():
                     if params.num_gpus > 1:
                         for gpu_list in output_collated:
-                            translated_sentences.extend(gpu_list)  
+                            translated_sentences.extend(gpu_list)
                         for gpu_list in targets_collated:
-                            target_sentences.extend(gpu_list)        
+                            target_sentences.extend(gpu_list)
                     else:
                         translated_sentences.extend(output)
                         target_sentences.extend(raw_target_text)
@@ -152,7 +152,7 @@ class Runner:
                 for step in range(last_batch):
                     self.cycle_scheduler.step()
             elif not params.test: # Load a model but restart training
-                last_epoch, last_batch = 0, -1 
+                last_epoch, last_batch = 0, -1
                 self.best_bleu_test = -float('Inf')
         if params.test:
             self.test(model, tokenizer, params, last_epoch)

@@ -25,7 +25,7 @@ def get_image_embs(clip, folder, image_splits, image_embs_f, desc, preprocessor,
 			except:
 				ignore_indices.append(i)
 		img_ds = DocDataset(imgs)
-		img_dl = DataLoader(img_ds, batch_size = 128, shuffle = False, num_workers = 4, pin_memory = True, collate_fn = collate_images)
+		img_dl = DataLoader(img_ds, batch_size = 128, shuffle = False, num_workers = 4, collate_fn = collate_images)
 		img_embs = create_embeddings(img_dl, clip, image_embs_f, desc)
 	return img_embs
 
@@ -44,7 +44,7 @@ def tokenize(texts, tokenizer, lang, outfile, desc = ''):
 		tokenizer.src_lang = get_lang_code(lang)
 		for text in tqdm(texts, desc = desc):
 			data.append(tokenizer(text, return_tensors = 'pt', truncation = True))
-		
+
 		with open(outfile, 'wb') as f:
 			pkl.dump(data, f)
 	else:
@@ -67,20 +67,20 @@ def postprocess_pairs(train_texts, test_texts, train_tok_mbart, test_tok_mbart, 
 			for lang in train_texts.keys():
 				train_texts[lang].pop(index)
 				train_tok_mbart[lang].pop(index)
-		
+
 		train_mask = torch.isin(torch.arange(train_text_embs[params.src_lang].shape[0]), torch.tensor(train_ignore_indices), invert = True)
 		for lang in train_texts.keys():
 			train_text_embs[lang] = train_text_embs[lang][train_mask]
-		
+
 		for index in sorted(test_ignore_indices[::-1], reverse = True): # Reversing before sorting since most of the list is already sorted in ascending order -> faster sorting
 			for lang in test_texts.keys():
 				test_texts[lang].pop(index)
 				test_tok_mbart[lang].pop(index)
-		
+
 		test_mask = torch.isin(torch.arange(test_text_embs[params.src_lang].shape[0]), torch.tensor(test_ignore_indices), invert = True)
 		for lang in test_texts.keys():
 			test_text_embs[lang] = test_text_embs[lang][test_mask]
-	
+
 		# Stage 2 and 3 dont use image embs so they can use the complete text
 		for lang in train_texts.keys():
 			assert len(train_texts[lang]) == len(train_tok_mbart[lang]) == len(train_text_embs[lang]), 'Misalignment in train text pairs'
@@ -90,5 +90,5 @@ def postprocess_pairs(train_texts, test_texts, train_tok_mbart, test_tok_mbart, 
 			assert len(test_texts[lang]) == len(test_tok_mbart[lang]) == len(test_text_embs[lang]), 'Misalignment in train text pairs'
 			if params.stage == 1:
 				assert len(test_texts[lang]) == len(test_tok_mbart[lang]) == len(test_text_embs[lang]) == len(test_img_embs), 'Misalignment in test text pairs with images'
-		
+
 	return train_texts, test_texts, train_tok_mbart, test_tok_mbart, train_img_embs, test_img_embs, train_text_embs, test_text_embs, train_tok_mclip, test_tok_mclip

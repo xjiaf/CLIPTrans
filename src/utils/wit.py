@@ -56,7 +56,7 @@ def get_WIT(params, model, test_ds = ['val'], force_pretraining = False):
 	if not os.path.exists(train_ignore_indices_f):
 		with open(train_ignore_indices_f, 'wb') as f:
 			pkl.dump(train_ignore_indices, f)
-		warnings.warn('train_ignore_indices.pkl was created. If the images were not read and embedded prior to this, this is an error. You would need to preprocess the image data again, ' +  
+		warnings.warn('train_ignore_indices.pkl was created. If the images were not read and embedded prior to this, this is an error. You would need to preprocess the image data again, ' +
 					  'since train_ignore_indices.pkl is not correctly aligned since it is the same as what is in train_image.txt, but does not include indices which failed to get read by PIL.')
 	else:
 		with open(train_ignore_indices_f, 'rb') as f:
@@ -68,12 +68,12 @@ def get_WIT(params, model, test_ds = ['val'], force_pretraining = False):
 	if not os.path.exists(test_ignore_indices_f):
 		with open(test_ignore_indices_f, 'wb') as f:
 			pkl.dump(test_ignore_indices, f)
-		warnings.warn(f'{test_ds}_ignore_indices.pkl was created. If the images were not read and embedded prior to this, this is an error. You would need to preprocess the image data again, ' +  
+		warnings.warn(f'{test_ds}_ignore_indices.pkl was created. If the images were not read and embedded prior to this, this is an error. You would need to preprocess the image data again, ' +
 					  f'since {test_ds}_ignore_indices.pkl is not correctly aligned since it is the same as what is in {test_ds}_image.txt, but does not include indices which failed to get read by PIL.')
 	else:
 		with open(test_ignore_indices_f, 'rb') as f:
 			test_ignore_indices = pkl.load(f)
-	
+
 	train_text_embs, test_text_embs = {}, {}
 	for lang in langs:
 		embs_f = os.path.join(datapath, f'{params.image_encoder}/train.{lang}.pth')
@@ -81,7 +81,7 @@ def get_WIT(params, model, test_ds = ['val'], force_pretraining = False):
 			train_text_embs[lang] = torch.load(embs_f)
 		except:
 			text_ds = DocDataset(train_tok_mclip[lang])
-			text_dl = DataLoader(text_ds, batch_size = 128, shuffle = False, num_workers = 0, pin_memory = True, collate_fn = collate_texts)
+			text_dl = DataLoader(text_ds, batch_size = 128, shuffle = False, num_workers = 0, collate_fn = collate_texts)
 			train_text_embs[lang] = create_embeddings(text_dl, model.clip, embs_f, f'Embedding train.{lang} mclip')
 
 		embs_f = os.path.join(datapath, f'{params.image_encoder}/{test_ds}.{lang}.pth')
@@ -89,7 +89,7 @@ def get_WIT(params, model, test_ds = ['val'], force_pretraining = False):
 			test_text_embs[lang] = torch.load(embs_f)
 		except:
 			text_ds = DocDataset(test_tok_mclip[lang])
-			text_dl = DataLoader(text_ds, batch_size = 128, shuffle = False, num_workers = 4, pin_memory = True, collate_fn = collate_texts)
+			text_dl = DataLoader(text_ds, batch_size = 128, shuffle = False, num_workers = 4, collate_fn = collate_texts)
 			test_text_embs[lang] = create_embeddings(text_dl, model.clip, embs_f, f'Embedding {test_ds}.{lang} mclip')
 
 	return postprocess_pairs(train_texts, test_texts, train_tok_mbart, test_tok_mbart, train_img_embs, test_img_embs, train_text_embs, test_text_embs, params, train_ignore_indices, test_ignore_indices, train_tok_mclip, test_tok_mclip, force_pretraining)

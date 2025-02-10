@@ -44,7 +44,7 @@ def get_WMT(params, model, test_ds = ['val'], force_pretraining = False):
 	except:
 		print('Did not find mclip test tokenized data. Creating...')
 		test_tok_mclip = {lang: tokenize(test_texts[lang], model.clip.text_preprocessor, lang, os.path.join(datapath, f'{params.image_encoder}/{test_ds}.{lang}.pkl'), f'Tokenizing test {lang} with mclip') for lang in langs}
-		
+
 	train_text_embs, test_text_embs = {}, {}
 	for lang in langs:
 		embs_f = os.path.join(datapath, f'{params.image_encoder}/train.{lang}.pth')
@@ -52,7 +52,7 @@ def get_WMT(params, model, test_ds = ['val'], force_pretraining = False):
 			train_text_embs[lang] = torch.load(embs_f)
 		except:
 			text_ds = DocDataset(train_tok_mclip[lang])
-			text_dl = DataLoader(text_ds, batch_size = 512, shuffle = False, num_workers = 4, pin_memory = True, collate_fn = collate_texts)
+			text_dl = DataLoader(text_ds, batch_size = 512, shuffle = False, num_workers = 4, collate_fn = collate_texts)
 			train_text_embs[lang] = create_embeddings(text_dl, model.clip, embs_f, f'Embedding train.{lang} mclip')
 
 		embs_f = os.path.join(datapath, f'{params.image_encoder}/{test_ds}.{lang}.pth')
@@ -60,7 +60,7 @@ def get_WMT(params, model, test_ds = ['val'], force_pretraining = False):
 			test_text_embs[lang] = torch.load(embs_f)
 		except:
 			text_ds = DocDataset(test_tok_mclip[lang])
-			text_dl = DataLoader(text_ds, batch_size = 512, shuffle = False, num_workers = 4, pin_memory = True, collate_fn = collate_texts)
+			text_dl = DataLoader(text_ds, batch_size = 512, shuffle = False, num_workers = 4, collate_fn = collate_texts)
 			test_text_embs[lang] = create_embeddings(text_dl, model.clip, embs_f, f'Embedding {test_ds}.{lang} mclip')
 
 	return train_texts, test_texts, train_tok_mbart, test_tok_mbart, None, None, train_text_embs, test_text_embs, train_tok_mclip, test_tok_mclip

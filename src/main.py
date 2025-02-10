@@ -108,14 +108,14 @@ def main(params):
         train_sampler = DistributedSampler(dataset=train_dataset, shuffle=True)
         test_sampler = DistributedSampler(dataset=test_dataset, shuffle=False)
         train_dl = DataLoader(train_dataset, batch_size = params.batch_size,
-                          num_workers = 0, pin_memory = True, collate_fn = collate_multi, sampler=train_sampler)
+                          num_workers = 0, collate_fn = collate_multi, sampler=train_sampler)
         test_dl = DataLoader(test_dataset, batch_size = 2*params.batch_size,
-                        num_workers = 6, pin_memory = True, collate_fn = collate_multi, sampler=test_sampler)
+                        num_workers = 6,  collate_fn = collate_multi, sampler=test_sampler)
     else:
         train_dl = DataLoader(train_dataset, batch_size = params.batch_size, shuffle = True,
-                            num_workers = 0, pin_memory = True, collate_fn = collate_multi)
+                            num_workers = 0, collate_fn = collate_multi)
         test_dl = DataLoader(test_dataset, batch_size = params.batch_size, shuffle = False,
-                            num_workers = 0, pin_memory = True, collate_fn = collate_multi)
+                            num_workers = 0, collate_fn = collate_multi)
     if is_main_process():
         if is_dist_avail_and_initialized():
             print(model.module.adapter) if hasattr(model.module, 'adapter') else print('No adapter')

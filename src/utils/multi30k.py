@@ -33,7 +33,7 @@ def get_Multi30k(params, model, test = ('2017', 'mscoco'), force_pretraining = F
 		print('Did not find mclip train tokenized data. Creating...')
 		train_tok_mclip = {lang: tokenize(train_texts[lang], model.clip.text_preprocessor, lang, os.path.join(datapath, f'text/data/task1/{params.image_encoder}/train.{lang}.pkl'), f'Tokenizing train {lang} with {params.image_encoder}') for lang in langs}
 
-	
+
 	# Reading test files
 	test_texts = {lang: open(os.path.join(datapath, f'text/data/task1/raw/test_{test[0]}_{test[1]}.{lang}')).read().splitlines() for lang in langs}
 	try:
@@ -55,7 +55,7 @@ def get_Multi30k(params, model, test = ('2017', 'mscoco'), force_pretraining = F
 	print('Loaded all text files. Getting images...')
 	train_img_embs = get_image_embs(model.clip, os.path.join(datapath, 'images/train'), train_image_splits, os.path.join(datapath, f'text/data/task1/{params.image_encoder}/train.pth'), 'Embedding train images', model.clip.image_preprocessor)
 	test_img_embs = get_image_embs(model.clip, os.path.join(datapath, f'images/test_{test[0]}_{test[1]}'), test_image_splits, os.path.join(datapath, f'text/data/task1/{params.image_encoder}/test_{test[0]}_{test[1]}.pth'), f'Embedding test_{test[0]}_{test[1]} images', model.clip.image_preprocessor)
-	
+
 	train_text_embs, test_text_embs = {}, {}
 	for lang in langs:
 		embs_f = os.path.join(datapath, f'text/data/task1/{params.image_encoder}/train.{lang}.pth')
@@ -63,7 +63,7 @@ def get_Multi30k(params, model, test = ('2017', 'mscoco'), force_pretraining = F
 			train_text_embs[lang] = torch.load(embs_f)
 		except:
 			text_ds = DocDataset(train_tok_mclip[lang])
-			text_dl = DataLoader(text_ds, batch_size = 256, shuffle = False, num_workers = 0, pin_memory = True, collate_fn = collate_texts)
+			text_dl = DataLoader(text_ds, batch_size = 256, shuffle = False, num_workers = 0, collate_fn = collate_texts)
 			train_text_embs[lang] = create_embeddings(text_dl, model.clip, embs_f, f'Embedding train.{lang} mclip')
 
 		embs_f = os.path.join(datapath, f'text/data/task1/{params.image_encoder}/test_{test[0]}_{test[1]}.{lang}.pth')
@@ -71,7 +71,7 @@ def get_Multi30k(params, model, test = ('2017', 'mscoco'), force_pretraining = F
 			test_text_embs[lang] = torch.load(embs_f)
 		except:
 			text_ds = DocDataset(test_tok_mclip[lang])
-			text_dl = DataLoader(text_ds, batch_size = 256, shuffle = False, num_workers = 4, pin_memory = True, collate_fn = collate_texts)
+			text_dl = DataLoader(text_ds, batch_size = 256, shuffle = False, num_workers = 4, collate_fn = collate_texts)
 			test_text_embs[lang] = create_embeddings(text_dl, model.clip, embs_f, f'Embedding test_{test[0]}_{test[1]}.{lang} mclip')
 
 	return train_texts, test_texts, train_tok_mbart, test_tok_mbart, train_img_embs, test_img_embs, train_text_embs, test_text_embs, train_tok_mclip, test_tok_mclip
