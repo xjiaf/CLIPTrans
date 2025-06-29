@@ -20,10 +20,7 @@ def get_Multi30k(params, model, test = ('2017', 'mscoco'), force_pretraining = F
 		datapath = os.path.join(params.data_dir, 'multi30k_uk')
 	else:
 		datapath = os.path.join(params.data_dir, 'multi30k')
-	if "uk" in langs and 'val' in test:
-		image_file = os.path.join(image_datapath, f'images/train')
-	else:
-		image_file = os.path.join(image_datapath, f'images/test_{test[0]}_{test[1]}')
+
 	os.makedirs(os.path.join(datapath, f'text/data/task1/mbart'), exist_ok = True)
 	os.makedirs(os.path.join(datapath, f'text/data/task1/{params.image_encoder}'), exist_ok = True)
 	# Reading train files
@@ -61,7 +58,12 @@ def get_Multi30k(params, model, test = ('2017', 'mscoco'), force_pretraining = F
 	# Getting images and embedding with CLIP. Same for text
 	print('Loaded all text files. Getting images...')
 	train_img_embs = get_image_embs(model.clip, os.path.join(datapath, 'images/train'), train_image_splits, os.path.join(datapath, f'text/data/task1/{params.image_encoder}/train.pth'), 'Embedding train images', model.clip.image_preprocessor)
-	test_img_embs = get_image_embs(model.clip, os.path.join(datapath, f'images/test_{test[0]}_{test[1]}'), test_image_splits, os.path.join(datapath, f'text/data/task1/{params.image_encoder}/test_{test[0]}_{test[1]}.pth'), f'Embedding test_{test[0]}_{test[1]} images', model.clip.image_preprocessor)
+
+	if "uk" in langs and 'val' in test:
+		image_file = os.path.join(image_datapath, f'images/train')
+	else:
+		image_file = os.path.join(image_datapath, f'images/test_{test[0]}_{test[1]}')
+	test_img_embs = get_image_embs(model.clip, os.path.join(datapath, image_file, test_image_splits, os.path.join(datapath, f'text/data/task1/{params.image_encoder}/test_{test[0]}_{test[1]}.pth'), f'Embedding test_{test[0]}_{test[1]} images', model.clip.image_preprocessor)
 
 	train_text_embs, test_text_embs = {}, {}
 	for lang in langs:
