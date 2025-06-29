@@ -8,7 +8,7 @@ Official implementation for the paper "CLIPTrans: Transferring Visual Knowledge 
 
 Setup the repository with the following commands:
 ```bash
-git clone --recursive git@github.com:devaansh100/CLIPTrans.git
+git clone --recursive https://github.com/xjiaf/CLIPTrans.git
 conda env create --file environment.yml
 conda activate cliptrans
 pip install -r requirements.txt
@@ -20,7 +20,7 @@ pip install -e .
 
 All data should be organised in the ```data/``` directory.
 
-## Multi30k 
+## Multi30k
 
 Download the images for [Flickr30k](https://github.com/multi30k/dataset/tree/master#visual-features) and the [MSCOCO test set](https://www.statmt.org/wmt17/multimodal-task.html) in the ```data/multi30k``` folder. You should have three tarballs for the images: ```flickr30k-images.tar.gz``` which will have the training, validation and Test2016 set; ```test_2017-flickr-images.gz``` for the MSCOCO set and ```images_mscoco.task1.tar.gz``` for the MSCOCO images.
 
