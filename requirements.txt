@@ -36,7 +36,6 @@ pandas==1.5.2
 Pillow==9.3.0
 portalocker==2.7.0
 pyarrow==11.0.0
-pycocotools==2.0.6
 pycparser
 pyOpenSSL
 PySocks
