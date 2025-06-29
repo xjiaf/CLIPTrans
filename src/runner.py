@@ -14,6 +14,7 @@ from model_utils import get_lang_code
 import warnings
 import evaluate
 import glob
+import time, datetime
 
 class Runner:
     def __init__(self, train_dl, test_dl, params):
@@ -65,55 +66,76 @@ class Runner:
         return checkpoint['epoch'], checkpoint['best_bleu_test']
 
     def fit_one_epoch(self, model, tokenizer, params, epoch):
+
+        start_time = time.time()
+
         model.train()
         train_loss = 0.0
         prob = torch.rand(1).item()
         self.optimizer.zero_grad()
-        for step, batch in enumerate(tqdm(self.train_dl, desc = f'Epoch {epoch}', disable = not is_main_process())):
+
+        for step, batch in enumerate(tqdm(self.train_dl,
+                                        desc=f'Epoch {epoch}',
+                                        disable=not is_main_process())):
             batch['mbart'], batch['clip'] = send_to_cuda(batch['mbart']), send_to_cuda(batch['clip'])
             with torch.autocast(device_type='cuda'):
                 output = model(batch)
                 loss = output[0]
             self.scaler.scale(loss).backward()
+
             if (step + 1) % self.update_count == 0:
                 self.scaler.step(self.optimizer)
                 self.scaler.update()
                 self.cycle_scheduler.step()
                 self.optimizer.zero_grad()
+
             if params.num_gpus > 1:
                 loss_collated = [torch.zeros_like(loss).cuda() for _ in range(params.num_gpus)]
                 dist.all_gather(loss_collated, loss)
                 train_loss = sum(loss_collated).item()
             else:
                 train_loss = loss.item()
+
             del batch
             if self.test_after > 0 and (step + 1) % self.test_after == 0:
                 self.test(model, tokenizer, params, epoch)
 
+        epoch_time = time.time() - start_time
+        elapsed = str(datetime.timedelta(seconds=int(epoch_time)))
+
         if is_main_process():
-            print(f'Epoch {epoch}: Train Loss: {self.update_count * train_loss/(params.num_gpus * len(self.train_dl))}\n')
+            mean_loss = self.update_count * train_loss / (params.num_gpus * len(self.train_dl))
+            print(f'Epoch {epoch}: Train Loss: {mean_loss:.6f}')
+            print(f'Epoch {epoch}: Time Elapsed: {elapsed}')
             if self.is_pretraining:
                 self.save_model(model, f'{params.model_name}/model_pretrained.pth', epoch)
 
     def test(self, model, tokenizer, params, epoch):
+        start_time = time.time()
+
         model.eval()
         test_loss = 0.0
         translated_sentences, target_sentences = [], []
         tokenizer.tgt_lang = get_lang_code(params.tgt_lang)
+
         with torch.no_grad():
-            for i, batch in enumerate(tqdm(self.test_dl, desc = f'Epoch {epoch}', disable = not is_main_process())):
+            for i, batch in enumerate(
+                tqdm(self.test_dl, desc=f'Epoch {epoch}', disable=not is_main_process())
+            ):
                 batch['clip'] = send_to_cuda(batch['clip'])
                 batch['mbart'] = send_to_cuda(batch['mbart'])
                 raw_target_text = batch.pop('raw')
                 with torch.autocast(device_type='cuda'):
-                    output = model(batch, mode = 'test')
-                output = tokenizer.batch_decode(output, skip_special_tokens = True)
+                    output = model(batch, mode='test')
+                output = tokenizer.batch_decode(output, skip_special_tokens=True)
+
                 if params.num_gpus > 1:
                     output_collated = [None for _ in range(params.num_gpus)]
                     dist.all_gather_object(output_collated, output)
 
                     targets_collated = [None for _ in range(params.num_gpus)]
                     dist.all_gather_object(targets_collated, raw_target_text)
+
                 if is_main_process():
                     if params.num_gpus > 1:
                         for gpu_list in output_collated:
@@ -124,12 +146,20 @@ class Runner:
                         translated_sentences.extend(output)
                         target_sentences.extend(raw_target_text)
 
+        test_time = time.time() - start_time
+        elapsed   = str(datetime.timedelta(seconds=int(test_time)))
+
         if is_main_process():
-            bleu_score = sacrebleu.corpus_bleu(translated_sentences, [target_sentences]).score
-            meteor_score = self.meteor.compute(predictions = translated_sentences, references = target_sentences)['meteor']
+            bleu_score   = sacrebleu.corpus_bleu(translated_sentences, [target_sentences]).score
+            meteor_score = self.meteor.compute(
+                predictions=translated_sentences,
+                references=target_sentences
+            )['meteor']
+
             print(f'Epoch {epoch}; Test BLEU: {bleu_score}; Test METEOR: {100 * meteor_score}')
+            print(f'Epoch {epoch}: Test Time Elapsed: {elapsed}')
             print('------------------------------------------')
-            for i, (tra, tgt) in enumerate(zip(translated_sentences[0:5], target_sentences[0:5])):
+            for i, (tra, tgt) in enumerate(zip(translated_sentences[:5], target_sentences[:5])):
                 print(f'Target Sentence {i}: {tgt}')
                 print(f'Translated Sentence {i}: {tra}')
                 print('------------------------------------------')
