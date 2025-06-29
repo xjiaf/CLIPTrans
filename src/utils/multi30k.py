@@ -63,7 +63,7 @@ def get_Multi30k(params, model, test = ('2017', 'mscoco'), force_pretraining = F
 		image_file = os.path.join(image_datapath, f'images/train')
 	else:
 		image_file = os.path.join(image_datapath, f'images/test_{test[0]}_{test[1]}')
-	test_img_embs = get_image_embs(model.clip, os.path.join(datapath, image_file, test_image_splits, os.path.join(datapath, f'text/data/task1/{params.image_encoder}/test_{test[0]}_{test[1]}.pth'), f'Embedding test_{test[0]}_{test[1]} images', model.clip.image_preprocessor)
+	test_img_embs = get_image_embs(model.clip, os.path.join(datapath, image_file, test_image_splits, os.path.join(datapath, f'text/data/task1/{params.image_encoder}/test_{test[0]}_{test[1]}.pth'), f'Embedding test_{test[0]}_{test[1]} images', model.clip.image_preprocessor))
 
 	train_text_embs, test_text_embs = {}, {}
 	for lang in langs:
