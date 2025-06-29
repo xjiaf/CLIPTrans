@@ -14,11 +14,6 @@ epochs=15                    # 训练轮数，全局可调
 src_lang="en"                 # 源语言，可全局调控
 tgt_languages=("de" "fr")     # 目标语言列表
 
-# 开始和停止时间（小时和分钟）
-start_hour=18
-start_minute=30
-stop_hour=7
-stop_minute=30
 
 # 执行选项
 run_stage1=true
@@ -73,7 +68,6 @@ for language in "${tgt_languages[@]}"; do
 
   for dataset in "${datasets[@]}"; do
     IFS=":" read -r test_year test_mode <<< "$dataset"
-    check_time
 
     cmd_test="python src/main.py --num_gpus $num_gpus \
       --mn multi30k \
