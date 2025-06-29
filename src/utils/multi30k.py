@@ -16,7 +16,14 @@ def get_Multi30k(params, model, test = ('2017', 'mscoco'), force_pretraining = F
 		test = ('2017', 'mscoco') # Anyway not going to be used
 	else:
 		langs =  [params.src_lang, params.tgt_lang]
-	datapath = os.path.join(params.data_dir, 'multi30k')
+	if "uk" in langs:
+		datapath = os.path.join(params.data_dir, 'multi30k_uk')
+	else:
+		datapath = os.path.join(params.data_dir, 'multi30k')
+	if "uk" in langs and 'val' in test:
+		image_file = os.path.join(image_datapath, f'images/train')
+	else:
+		image_file = os.path.join(image_datapath, f'images/test_{test[0]}_{test[1]}')
 	os.makedirs(os.path.join(datapath, f'text/data/task1/mbart'), exist_ok = True)
 	os.makedirs(os.path.join(datapath, f'text/data/task1/{params.image_encoder}'), exist_ok = True)
 	# Reading train files
